@@ -100,8 +100,8 @@ window.autoHeight = () => {
     })
 }
 
-window.openWindow = (url, target) => {
-    window.open(url, target);
+window.openWindow = (url, target, features) => {
+    window.open(url, target, features || "");
 }
 
 window.addEventListener("load", () => {

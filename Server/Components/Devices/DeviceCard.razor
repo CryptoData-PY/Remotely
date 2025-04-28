@@ -66,10 +66,10 @@
         } 
         <div>
             <div class="font-weight-bold text-info">
-                <label>User</label>
+                <label>Group</label>
             </div>
             <div>
-                @Device.CurrentUser
+                @(_deviceGroups.FirstOrDefault(x => x.ID == Device.DeviceGroupID)?.Name ?? "None")
             </div>
 
             <div style="grid-row: span 2" class="expanded-visible"></div>
@@ -113,43 +113,32 @@
                                 </ButtonContent>
                             </FileInputButton>
                         </li>
-                        <li>
-                            <button class="dropdown-item bg-danger" @onclick="UninstallAgent">
-                                <i class="oi oi-delete" title="Uninstall"></i>
-                                <span class="ms-2">Uninstall</span>
-                            </button>
-                        </li>
+                        @if (User?.IsAdministrator == true)
+                        {
+                            <li>
+                                <button class="dropdown-item bg-danger" @onclick="UninstallAgent">
+                                    <i class="oi oi-delete" title="Uninstall"></i>
+                                    <span class="ms-2">Uninstall</span>
+                                </button>
+                            </li>
+                        }
                     </ChildListItems>
                 </DropdownButton>
             </div>
 
             <div class="font-weight-bold text-info">
-                <label>Platform</label>
+                <label>IP</label>
             </div>
             <div>
-                @Device.Platform
+                @Device.PublicIP
             </div>
 
             <div class="font-weight-bold text-info">
-                <label>Disk</label>
-                <button class="btn btn-link p-0 m-0 expanded-visible"
-                        style="font-size: 50%"
-                        @onclick="ShowAllDisks" 
-                        @onclick:stopPropagation>
-                    (View All)
-                </button>
+                <label>CPU</label>
             </div>
             <div>
-                @(MathHelper.GetFormattedPercent(Device.UsedStoragePercent))
+                @MathHelper.GetFormattedPercent(Device.CpuUtilization)
             </div>
-
-            <div class="font-weight-bold text-info expanded-visible">
-                Total Storage
-            </div>
-            <div class="expanded-visible">
-                @(Device.TotalStorage) GB
-            </div>
-
 
             <div class="font-weight-bold text-info">
                 <label>Memory</label>
@@ -168,10 +157,37 @@
             @if (IsExpanded)
             {
                 <div class="font-weight-bold text-info">
-                    <label>CPU</label>
+                    <label>User</label>
                 </div>
                 <div>
-                    @MathHelper.GetFormattedPercent(Device.CpuUtilization)
+                    @Device.CurrentUser
+                </div>
+
+                <div class="font-weight-bold text-info">
+                    <label>Platform</label>
+                </div>
+                <div>
+                    @Device.Platform
+                </div>
+
+                <div class="font-weight-bold text-info">
+                    <label>Disk</label>
+                    <button class="btn btn-link p-0 m-0"
+                            style="font-size: 50%"
+                            @onclick="ShowAllDisks" 
+                            @onclick:stopPropagation>
+                        (View All)
+                    </button>
+                </div>
+                <div>
+                    @(MathHelper.GetFormattedPercent(Device.UsedStoragePercent))
+                </div>
+
+                <div class="font-weight-bold text-info">
+                    Total Storage
+                </div>
+                <div>
+                    @(Device.TotalStorage) GB
                 </div>
             }
 
@@ -202,13 +218,6 @@
                     </div>
 
                     <div class="font-weight-bold text-info mt-2">
-                        Public IP
-                    </div>
-                    <div>
-                        <input class="form-control" readonly value="@Device.PublicIP" />
-                    </div>
-
-                    <div class="font-weight-bold text-info mt-2">
                         MAC Addresses
                     </div>
                     <div>
@@ -218,57 +227,89 @@
                             value="@(string.Join(", ", Device.MacAddresses ?? Array.Empty<string>()))" />
                     </div>
 
-                    <EditForm Model="Device" OnValidSubmit="HandleValidSubmit">
-                        <DataAnnotationsValidator />
+                    @if (User?.IsAdministrator == true)
+                    {
+                        <EditForm Model="Device" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
 
+                            <div class="font-weight-bold text-info mt-2">
+                                Device Alias
+                            </div>
+                            <div>
+                                <InputText class="form-control" @bind-Value="@Device.Alias" />
+                                <ValidationMessage For="() => Device.Alias" />
+                            </div>
+
+                            <div class="font-weight-bold text-info mt-2">
+                                Device Group
+                            </div>
+                            <div>
+                                <InputSelect @bind-Value="Device.DeviceGroupID" class="form-control">
+                                    <option value="">None</option>
+
+                                    @foreach (var group in _deviceGroups)
+                                    {
+                                        <option @key="group.ID" value="@group.ID">@group.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="() => Device.DeviceGroupID" />
+                            </div>
+
+                            <div class="font-weight-bold text-info mt-2">
+                                Tags
+                            </div>
+                            <div>
+                                <InputText @bind-Value="Device.Tags" class="form-control" />
+                                <ValidationMessage For="() => Device.Tags" />
+                            </div>
+
+                            <div class="font-weight-bold text-info mt-2">
+                                Notes
+                            </div>
+                            <div>
+                                <InputTextArea @bind-Value="Device.Notes" style="width:100%; height: 10em;"></InputTextArea>
+                                <ValidationMessage For="() => Device.Notes" />
+                            </div>
+
+                            <div>
+                                <ValidationSummary />
+                            </div>
+
+                            <div class="text-end mt-2">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </EditForm>
+                    }
+                    else
+                    {
                         <div class="font-weight-bold text-info mt-2">
                             Device Alias
                         </div>
                         <div>
-                            <InputText class="form-control" @bind-Value="@Device.Alias" />
-                            <ValidationMessage For="() => Device.Alias" />
+                            <input class="form-control" readonly value="@Device.Alias" />
                         </div>
 
                         <div class="font-weight-bold text-info mt-2">
                             Device Group
                         </div>
                         <div>
-                            <InputSelect @bind-Value="Device.DeviceGroupID" class="form-control">
-                                <option value="">None</option>
-
-                                @foreach (var group in _deviceGroups)
-                                {
-                                    <option @key="group.ID" value="@group.ID">@group.Name</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="() => Device.DeviceGroupID" />
+                            <input class="form-control" readonly value="@(_deviceGroups.FirstOrDefault(x => x.ID == Device.DeviceGroupID)?.Name ?? "None")" />
                         </div>
 
                         <div class="font-weight-bold text-info mt-2">
                             Tags
                         </div>
                         <div>
-                            <InputText @bind-Value="Device.Tags" class="form-control" />
-                            <ValidationMessage For="() => Device.Tags" />
+                            <input class="form-control" readonly value="@Device.Tags" />
                         </div>
 
                         <div class="font-weight-bold text-info mt-2">
                             Notes
                         </div>
                         <div>
-                            <InputTextArea @bind-Value="Device.Notes" style="width:100%; height: 10em;"></InputTextArea>
-                            <ValidationMessage For="() => Device.Notes" />
+                            <textarea class="form-control" readonly style="width:100%; height: 10em;">@Device.Notes</textarea>
                         </div>
-
-                        <div>
-                            <ValidationSummary />
-                        </div>
-
-                        <div class="text-end mt-2">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </EditForm>
-
+                    }
                 }
             </div>
         </div>

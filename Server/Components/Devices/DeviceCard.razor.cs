@@ -329,12 +329,24 @@ public partial class DeviceCard : AuthComponentBase
             return;
         }
 
+        var windowFeatures = 
+            "menubar=no," +
+            "toolbar=no," +
+            "location=no," +
+            "status=no," +
+            "directories=no," +
+            "scrollbars=yes," +
+            "resizable=yes," +
+            "width=384," +
+            "height=216";
+
         JsInterop.OpenWindow(
             $"/Viewer" +
                 $"?mode=Unattended&sessionId={session.UnattendedSessionId}" +
                 $"&accessKey={session.AccessKey}" +
                 $"&viewonly={viewOnly}", 
-            "_blank");
+            "_blank",
+            windowFeatures);
     }
 
     private void ToggleIsSelected(ChangeEventArgs args)

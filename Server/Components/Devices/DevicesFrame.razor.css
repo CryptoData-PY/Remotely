@@ -1,18 +1,91 @@
 ﻿#deviceControlsWrapper {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-column-gap: 20px;
-    grid-row-gap: 10px;
-    margin-bottom: 5px;
-    margin-right: 5px;
-    padding-top: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-top: 0.5rem;
+    width: 100%;
+    max-width: calc(100% - 470px);
 }
 
-    #deviceControlsWrapper > :last-child {
-        text-align: right;
+@media (max-width: 1200px) {
+    #deviceControlsWrapper {
+        max-width: 100%;
+        margin-top: 3.5rem;
     }
 
-#deviceListDiv{
+    .position-absolute {
+        position: relative !important;
+        width: 100% !important;
+        right: auto !important;
+        top: auto !important;
+    }
+}
+
+#deviceListDiv {
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+.filter-section {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #666;
+    cursor: help;
+}
+
+.form-group label:hover {
+    color: #333;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.form-group input:hover,
+.form-group select:hover {
+    border-color: #999;
+}
+
+.btn-group .btn {
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .d-flex.gap-3 {
+        flex-wrap: wrap;
+    }
+
+    .d-flex.gap-3 > div {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .d-flex.gap-3 input,
+    .d-flex.gap-3 select {
+        width: 100% !important;
+    }
 }

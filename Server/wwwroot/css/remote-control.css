@@ -9,6 +9,9 @@ body {
     overscroll-behavior-y: contain;
     background-position: 0 0;
     background-size: 40px 40px;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .background-layers {
@@ -135,12 +138,21 @@ button {
 }
 
 #menuButton {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     pointer-events: all;
     cursor: pointer;
-    z-index: 3;
+    z-index: 5;
     transition: .5s ease all;
     width: 50px;
     height: 30px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 0 0 5px 5px;
+    border: none;
+    color: white;
+    padding: 0;
 }
 
     #menuButton:focus {
@@ -158,52 +170,59 @@ button {
     }
 
 #menuFrame {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    right: 0;
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
     grid-column-gap: 10px;
     overflow: hidden;
     text-align: center;
     height: 0;
-    z-index: 3;
+    z-index: 5;
+    background-color: rgba(0, 0, 0, 0.8);
+    transition: all 0.3s ease;
+    padding: 0;
 }
 
     #menuFrame.open {
-        padding-left: 10px;
+        padding: 10px;
         height: auto;
+        min-height: 40px;
     }
 
-    #menuFrame #disconnectButton {
-        background-color: #a61930;
-        border: 1px solid #a61930;
-        color: #fff;
-        font-size: 16px;
+    #menuFrame button {
+        margin: 2px;
+        padding: 5px 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-radius: 3px;
     }
 
-        #menuFrame #disconnectButton:hover {
-            border: 1px solid #384346;
-        }
-        #menuFrame #disconnectButton:active {
-            border: 1px solid #009888;
-        }
+    #menuFrame button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    #menuFrame button.toggled {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
 
 .menu-column {
-  display: flex;
-  flex-wrap: wrap;
-  overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 }
 
 .menu-column-left {
-  align-items: center;
-  align-content: center;
+    justify-content: flex-start;
 }
 
 .menu-column-right {
-    flex-direction: row-reverse;
-    align-items: flex-start;
-}
-
-.menu-column-middle {
-    justify-content: center;
+    justify-content: flex-end;
 }
 
 .popup-menu {
@@ -332,28 +351,32 @@ button {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 2;
+    z-index: 1;
 }
 
 #screenViewerWrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    -ms-touch-action: pan-x pan-y;
-    touch-action: pan-x pan-y;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    text-align: center;
+    z-index: 1;
+    overflow: hidden;
 }
 
 #screenViewer {
-    position: absolute;
-    -ms-touch-action: pan-x pan-y;
-    touch-action: pan-x pan-y;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    display: block;
 }
+
 #screenViewer.fit {
-    max-width: 99%;
-    max-height: 99%;
-    left: 50%;
-    transform: translateX(-50%);
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 

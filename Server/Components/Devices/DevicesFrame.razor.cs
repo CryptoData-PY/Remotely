@@ -13,8 +13,19 @@ using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Microsoft.JSInterop;
+using System.Text.Json;
 
 namespace Remotely.Server.Components.Devices;
+
+public class FilterCriteria
+{
+    public string? SearchText { get; set; }
+    public string? Platform { get; set; }
+    public string? UserName { get; set; }
+    public DateTimeOffset? LastSeenSince { get; set; }
+    public bool? IsOnline { get; set; }
+}
 
 [Authorize]
 public partial class DevicesFrame : AuthComponentBase
@@ -29,8 +40,8 @@ public partial class DevicesFrame : AuthComponentBase
     private readonly List<PropertyInfo> _sortableProperties = new();
     private int _currentPage = 1;
     private int _devicesPerPage = 25;
-    private string? _filter;
-    private bool _hideOfflineDevices = true;
+    private FilterCriteria _filterCriteria = new();
+    private bool _hideOfflineDevices = false;
     private string _lastFilterState = string.Empty;
     private string? _selectedGroupId;
     private string _selectedSortProperty = "DeviceName";
@@ -42,20 +53,9 @@ public partial class DevicesFrame : AuthComponentBase
     [Inject]
     private ICircuitConnection CircuitConnection { get; init; } = null!;
 
-    private string CurrentFilterState
-    {
-        get
-        {
-            return
-                $"{_filter}" +
-                $"{_selectedGroupId}|" +
-                $"{_selectedSortProperty}|" +
-                $"{_sortDirection}|" +
-                $"{_hideOfflineDevices}|" +
-                $"{_currentPage}|" +
-                $"{_devicesPerPage}|";
-        }
-    }
+    [Inject]
+    private IJSRuntime JsInterop { get; init; } = null!;
+
     [Inject]
     private IDataService DataService { get; init; } = null!;
 
@@ -71,6 +71,23 @@ public partial class DevicesFrame : AuthComponentBase
     private IToastService ToastService { get; init; } = null!;
 
     private int TotalPages => (int)Math.Max(1, Math.Ceiling((decimal)_filteredDevices.Count / _devicesPerPage));
+
+    private string CurrentFilterState
+    {
+        get
+        {
+            return JsonSerializer.Serialize(new
+            {
+                _filterCriteria,
+                _selectedGroupId,
+                _selectedSortProperty,
+                _sortDirection,
+                _hideOfflineDevices,
+                _currentPage,
+                _devicesPerPage
+            });
+        }
+    }
 
     public async Task Refresh()
     {
@@ -160,15 +177,23 @@ public partial class DevicesFrame : AuthComponentBase
                 continue;
             }
 
-            if (!string.IsNullOrWhiteSpace(_filter) &&
-                    device.Alias?.Contains(_filter, StringComparison.OrdinalIgnoreCase) != true &&
-                    device.CurrentUser?.Contains(_filter, StringComparison.OrdinalIgnoreCase) != true &&
-                    device.DeviceName?.Contains(_filter, StringComparison.OrdinalIgnoreCase) != true &&
-                    device.Notes?.Contains(_filter, StringComparison.OrdinalIgnoreCase) != true &&
-                    device.Platform?.Contains(_filter, StringComparison.OrdinalIgnoreCase) != true &&
-                    device.Tags?.Contains(_filter, StringComparison.OrdinalIgnoreCase) != true)
+            if (_filterCriteria.IsOnline.HasValue && device.IsOnline != _filterCriteria.IsOnline.Value)
             {
                 continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_filterCriteria.SearchText))
+            {
+                var searchText = _filterCriteria.SearchText.ToLower();
+                var matchesSearch = 
+                    device.DeviceName?.ToLower().Contains(searchText) == true ||
+                    device.Alias?.ToLower().Contains(searchText) == true ||
+                    device.Tags?.ToLower().Contains(searchText) == true;
+
+                if (!matchesSearch)
+                {
+                    continue;
+                }
             }
 
             if (_selectedGroupId == _deviceGroupAll ||
@@ -330,6 +355,53 @@ public partial class DevicesFrame : AuthComponentBase
         }
     }
 
+    private async Task RemoteControlSelected()
+    {
+        if (!CardStore.SelectedDevices.Any())
+        {
+            ToastService.ShowToast("Please select at least one device.", classString: "bg-warning");
+            return;
+        }
+
+        foreach (var deviceId in CardStore.SelectedDevices)
+        {
+            var device = _allDevices.FirstOrDefault(x => x.ID == deviceId);
+            if (device?.IsOnline == true)
+            {
+                var result = await CircuitConnection.RemoteControl(deviceId, false);
+                if (result.IsSuccess)
+                {
+                    var session = result.Value;
+
+                    if (!await session.WaitForSessionReady(TimeSpan.FromSeconds(20)))
+                    {
+                        ToastService.ShowToast("Session failed to start", classString: "bg-danger");
+                        continue;
+                    }
+
+                    var windowFeatures = 
+                        "menubar=no," +
+                        "toolbar=no," +
+                        "location=no," +
+                        "status=no," +
+                        "directories=no," +
+                        "scrollbars=yes," +
+                        "resizable=yes," +
+                        "width=384," +
+                        "height=216";
+
+                    await JsInterop.InvokeVoidAsync("open", 
+                        $"/Viewer" +
+                            $"?mode=Unattended&sessionId={session.UnattendedSessionId}" +
+                            $"&accessKey={session.AccessKey}" +
+                            $"&viewonly=false",
+                        "_blank",
+                        windowFeatures);
+                }
+            }
+        }
+    }
+
     private void SelectAllCards()
     {
         if (CardStore.SelectedDevices.Any())
@@ -391,5 +463,47 @@ public partial class DevicesFrame : AuthComponentBase
                 $"Failed to send wake commands.  Reason: {result.Reason}", 
                 ToastType.Error);
         }
+    }
+
+    private void HandleLastSeenFilterChange(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()))
+        {
+            _filterCriteria.LastSeenSince = null;
+        }
+        else if (int.TryParse(e.Value?.ToString(), out var hours))
+        {
+            _filterCriteria.LastSeenSince = DateTimeOffset.Now.AddHours(-hours);
+        }
+    }
+
+    private void ApplyFilterPreset(FilterPreset preset)
+    {
+        _filterCriteria = preset switch
+        {
+            FilterPreset.AllDevices => new FilterCriteria(),
+            FilterPreset.WindowsDevices => new FilterCriteria { Platform = "Windows" },
+            FilterPreset.LinuxDevices => new FilterCriteria { Platform = "Linux" },
+            FilterPreset.MacDevices => new FilterCriteria { Platform = "Mac" },
+            FilterPreset.OnlineOnly => new FilterCriteria { IsOnline = true },
+            FilterPreset.OfflineOnly => new FilterCriteria { IsOnline = false },
+            _ => _filterCriteria
+        };
+    }
+
+    private void ClearFilters()
+    {
+        _filterCriteria = new FilterCriteria();
+    }
+
+    public enum FilterPreset
+    {
+        AllDevices,
+        WindowsDevices,
+        LinuxDevices,
+        MacDevices,
+        OnlineOnly,
+        OfflineOnly,
+        Custom
     }
 }

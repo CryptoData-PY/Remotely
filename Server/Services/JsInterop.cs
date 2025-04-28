@@ -18,7 +18,7 @@ public interface IJsInterop
 
     void InvokeClick(string elementId);
 
-    void OpenWindow(string url, string target);
+    void OpenWindow(string url, string target, string features = "");
 
     void PreventTabOut(ElementReference terminalInput);
 
@@ -77,9 +77,9 @@ public class JsInterop : IJsInterop
         _jsRuntime.InvokeVoidAsync("invokeClick", elementId);
     }
 
-    public void OpenWindow(string url, string target)
+    public void OpenWindow(string url, string target, string features = "")
     {
-        _jsRuntime.InvokeVoidAsync("openWindow", url, target);
+        _jsRuntime.InvokeVoidAsync("openWindow", url, target, features);
     }
 
     public void PreventTabOut(ElementReference terminalInput)
