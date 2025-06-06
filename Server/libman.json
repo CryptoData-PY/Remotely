@@ -18,17 +18,6 @@
       ]
     },
     {
-      "provider": "unpkg",
-      "library": "@microsoft/signalr-protocol-msgpack@8.0.7",
-      "destination": "wwwroot/lib/microsoft/signalr-protocol-msgpack/",
-      "files": [
-        "dist/browser/signalr-protocol-msgpack.js",
-        "dist/browser/signalr-protocol-msgpack.js.map",
-        "dist/browser/signalr-protocol-msgpack.min.js",
-        "dist/browser/signalr-protocol-msgpack.min.js.map"
-      ]
-    },
-    {
       "library": "font-awesome@6.5.2",
       "destination": "wwwroot/lib/fontawesome/"
     }
