@@ -53,4 +53,12 @@
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
+  <Target Name="CopyClientBinaries" AfterTargets="Publish">
+    <ItemGroup>
+      <WinClientBinaries Include="..\Desktop.Win\bin\Release\net8.0\publish\Remotely_Desktop.exe" />
+    </ItemGroup>
+    <MakeDir Directories="$(PublishDir)wwwroot/Content/Win-x64" />
+    <Copy SourceFiles="@(WinClientBinaries)" DestinationFolder="$(PublishDir)wwwroot/Content/Win-x64/" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
