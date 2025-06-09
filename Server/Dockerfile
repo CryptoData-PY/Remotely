@@ -17,19 +17,11 @@ FROM build AS publish
 ARG ASPNETCORE_ENVIRONMENT=Production
 RUN dotnet publish "Server.csproj" -c $ASPNETCORE_ENVIRONMENT -o /app/publish /p:UseAppHost=false
 
-# Copy and build Desktop.Win
-COPY ["Desktop.Win/Desktop.Win.csproj", "Desktop.Win/"]
-RUN dotnet restore "Desktop.Win/Desktop.Win.csproj"
-COPY Desktop.Win/ ./Desktop.Win/
-RUN dotnet publish "Desktop.Win/Desktop.Win.csproj" -c $ASPNETCORE_ENVIRONMENT -o /app/DesktopWinPublish /p:UseAppHost=false
-
-# Copy the Windows client binary into the Server's wwwroot
-RUN mkdir -p /app/publish/wwwroot/Content/Win-x64 && \
-    cp /app/DesktopWinPublish/Remotely_Desktop.exe /app/publish/wwwroot/Content/Win-x64/
-
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# Copy the Windows client binary from the repository
+COPY Server/wwwroot/Content/Win-x64/Remotely_Desktop.exe /app/wwwroot/Content/Win-x64/
 ENTRYPOINT ["dotnet", "Remotely_Server.dll"]
 
 HEALTHCHECK \

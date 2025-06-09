@@ -1,5 +1,9 @@
 # PowerShell script to publish all client projects to Server/wwwroot/Content
 
+param (
+    [string]$Hostname = "https://remotely.redfox.lan:8081/"  # Default hostname
+)
+
 $projects = @{
     "Agent\Agent.csproj" = "Agent"
     "Desktop.Win\Desktop.Win.csproj" = @{ OutDir = "Win-x64"; RID = "win-x64" }
@@ -31,4 +35,12 @@ foreach ($proj in $projects.Keys) {
     }
 }
 
-Write-Host "All client projects published to Server/wwwroot/Content/"
+# Update client configuration with hostname
+$configFiles = Get-ChildItem -Path "Server\wwwroot\Content\*" -Recurse -Filter "appsettings.json"
+foreach ($file in $configFiles) {
+    $config = Get-Content -Path $file.FullName | ConvertFrom-Json
+    $config.ServerUrl = $Hostname
+    $config | ConvertTo-Json | Set-Content -Path $file.FullName
+}
+
+Write-Host "All client projects published to Server/wwwroot/Content/ with hostname: $Hostname"
