@@ -21,7 +21,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 # Copy the Windows client binary from the repository
-COPY Server/wwwroot/Content/Win-x64/Remotely_Desktop.exe /app/wwwroot/Content/Win-x64/
+COPY wwwroot/Content/Win-x64/Remotely_Desktop.exe /app/wwwroot/Content/Win-x64/
 ENTRYPOINT ["dotnet", "Remotely_Server.dll"]
 
 HEALTHCHECK \
