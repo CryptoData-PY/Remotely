@@ -20,9 +20,9 @@ RUN dotnet publish "Server.csproj" -c $ASPNETCORE_ENVIRONMENT -o /app/publish /p
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-# Copy the Windows client binary from the repository
-RUN mkdir -p /app/wwwroot/Content/Win-x64
-COPY Server/wwwroot/Content/Win-x64/Remotely_Desktop.exe /app/wwwroot/Content/Win-x64/
+# Copy all essential client files from the repository
+RUN mkdir -p /app/wwwroot/Content
+COPY Server/wwwroot/Content/ /app/wwwroot/Content/
 ENTRYPOINT ["dotnet", "Remotely_Server.dll"]
 
 HEALTHCHECK \

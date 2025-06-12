@@ -301,7 +301,14 @@ Server.Installer/Properties/launchSettings.json
 /.vscode
 
 # Allow committing the Windows client binary
-# Ignore everything in Content except the Windows client binary
+# Ignore everything in Content except essential client files
 /Server/wwwroot/Content/*
 !/Server/wwwroot/Content/Win-x64/
 !/Server/wwwroot/Content/Win-x64/Remotely_Desktop.exe
+!/Server/wwwroot/Content/Win-x86/
+!/Server/wwwroot/Content/Win-x86/Remotely_Desktop.exe
+!/Server/wwwroot/Content/Linux-x64/
+!/Server/wwwroot/Content/Linux-x64/Remotely_Desktop
+!/Server/wwwroot/Content/*.zip
+!/Server/wwwroot/Content/*.ps1
+!/Server/wwwroot/Content/*.sh
