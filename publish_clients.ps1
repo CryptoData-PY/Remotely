@@ -2,7 +2,8 @@
 
 param (
     [string]$Hostname = "https://remotely.redfox.lan",  # Updated hostname without port
-    [string]$CurrentVersion = ""
+    [string]$CurrentVersion = "",
+    [switch]$MinimalMode  # Only build essential clients
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,6 +15,9 @@ if (!$CurrentVersion) {
 
 Write-Host "Building Remotely clients for hostname: $Hostname" -ForegroundColor Green
 Write-Host "Version: $CurrentVersion" -ForegroundColor Green
+if ($MinimalMode) {
+    Write-Host "MINIMAL MODE: Building only Windows x64 and Linux x64" -ForegroundColor Yellow
+}
 
 # Clean and create Content directory
 $ContentDir = "Server\wwwroot\Content"
@@ -23,21 +27,39 @@ if (Test-Path $ContentDir) {
 New-Item -ItemType Directory -Force -Path $ContentDir | Out-Null
 
 # Create subdirectories
-$subdirs = @("Win-x64", "Win-x86", "Linux-x64", "MacOS-x64", "MacOS-arm64")
+if ($MinimalMode) {
+    $subdirs = @("Win-x64", "Linux-x64")
+    $agentBuilds = @{
+        "win-x64" = @{ RID = "win-x64"; ZipName = "Remotely-Win-x64.zip" }
+        "linux-x64" = @{ RID = "linux-x64"; ZipName = "Remotely-Linux.zip" }
+    }
+    $desktopBuilds = @{
+        "win-x64" = @{ Project = "Desktop.Win\Desktop.Win.csproj"; RID = "win-x64"; OutDir = "Win-x64"; FileName = "Remotely_Desktop.exe" }
+        "linux-x64" = @{ Project = "Desktop.Linux\Desktop.Linux.csproj"; RID = "linux-x64"; OutDir = "Linux-x64"; FileName = "Remotely_Desktop" }
+    }
+} else {
+    $subdirs = @("Win-x64", "Win-x86", "Linux-x64", "MacOS-x64", "MacOS-arm64")
+    # Publish agents with compression
+    $agentBuilds = @{
+        "win-x64" = @{ RID = "win-x64"; ZipName = "Remotely-Win-x64.zip" }
+        "win-x86" = @{ RID = "win-x86"; ZipName = "Remotely-Win-x86.zip" }
+        "linux-x64" = @{ RID = "linux-x64"; ZipName = "Remotely-Linux.zip" }
+        "osx-x64" = @{ RID = "osx-x64"; ZipName = "Remotely-MacOS-x64.zip" }
+        "osx-arm64" = @{ RID = "osx-arm64"; ZipName = "Remotely-MacOS-arm64.zip" }
+    }
+    # Publish desktop clients using runtime identifier approach
+    $desktopBuilds = @{
+        "win-x64" = @{ Project = "Desktop.Win\Desktop.Win.csproj"; RID = "win-x64"; OutDir = "Win-x64"; FileName = "Remotely_Desktop.exe" }
+        "win-x86" = @{ Project = "Desktop.Win\Desktop.Win.csproj"; RID = "win-x86"; OutDir = "Win-x86"; FileName = "Remotely_Desktop.exe" }
+        "linux-x64" = @{ Project = "Desktop.Linux\Desktop.Linux.csproj"; RID = "linux-x64"; OutDir = "Linux-x64"; FileName = "Remotely_Desktop" }
+    }
+}
+
 foreach ($dir in $subdirs) {
     New-Item -ItemType Directory -Force -Path "$ContentDir\$dir" | Out-Null
 }
 
 Write-Host "Publishing agents..." -ForegroundColor Yellow
-
-# Publish agents with compression
-$agentBuilds = @{
-    "win-x64" = @{ RID = "win-x64"; ZipName = "Remotely-Win-x64.zip" }
-    "win-x86" = @{ RID = "win-x86"; ZipName = "Remotely-Win-x86.zip" }
-    "linux-x64" = @{ RID = "linux-x64"; ZipName = "Remotely-Linux.zip" }
-    "osx-x64" = @{ RID = "osx-x64"; ZipName = "Remotely-MacOS-x64.zip" }
-    "osx-arm64" = @{ RID = "osx-arm64"; ZipName = "Remotely-MacOS-arm64.zip" }
-}
 
 foreach ($build in $agentBuilds.Keys) {
     $config = $agentBuilds[$build]
@@ -63,13 +85,6 @@ foreach ($build in $agentBuilds.Keys) {
 }
 
 Write-Host "Publishing desktop clients..." -ForegroundColor Yellow
-
-# Publish desktop clients using runtime identifier approach
-$desktopBuilds = @{
-    "win-x64" = @{ Project = "Desktop.Win\Desktop.Win.csproj"; RID = "win-x64"; OutDir = "Win-x64"; FileName = "Remotely_Desktop.exe" }
-    "win-x86" = @{ Project = "Desktop.Win\Desktop.Win.csproj"; RID = "win-x86"; OutDir = "Win-x86"; FileName = "Remotely_Desktop.exe" }
-    "linux-x64" = @{ Project = "Desktop.Linux\Desktop.Linux.csproj"; RID = "linux-x64"; OutDir = "Linux-x64"; FileName = "Remotely_Desktop" }
-}
 
 foreach ($build in $desktopBuilds.Keys) {
     $config = $desktopBuilds[$build]
