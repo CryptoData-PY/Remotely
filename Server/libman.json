@@ -1,38 +1,5 @@
 {
   "version": "1.0",
   "defaultProvider": "jsdelivr",
-  "libraries": [
-    {
-      "library": "microsoft-signalr@8.0.7",
-      "provider": "jsdelivr",
-      "destination": "wwwroot/lib/microsoft-signalr/"
-    },
-    {
-      "library": "@msgpack/msgpack@3.1.2",
-      "destination": "wwwroot/lib/msgpack/",
-      "provider": "jsdelivr",
-      "files": [
-        "dist.umd/msgpack.js",
-        "dist.umd/msgpack.min.js",
-        "dist.umd/msgpack.js.map",
-        "dist.umd/msgpack.min.js.map"
-      ]
-    },
-    {
-      "provider": "jsdelivr",
-      "library": "@microsoft/signalr-protocol-msgpack@8.0.7",
-      "destination": "wwwroot/lib/microsoft/signalr-protocol-msgpack/",
-      "files": [
-        "dist/browser/signalr-protocol-msgpack.js",
-        "dist/browser/signalr-protocol-msgpack.js.map",
-        "dist/browser/signalr-protocol-msgpack.min.js",
-        "dist/browser/signalr-protocol-msgpack.min.js.map"
-      ]
-    },
-    {
-      "library": "font-awesome@6.5.2",
-      "provider": "jsdelivr",
-      "destination": "wwwroot/lib/fontawesome/"
-    }
-  ]
+  "libraries": []
 }
