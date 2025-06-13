@@ -312,3 +312,11 @@ Server.Installer/Properties/launchSettings.json
 !/Server/wwwroot/Content/*.zip
 !/Server/wwwroot/Content/*.ps1
 !/Server/wwwroot/Content/*.sh
+
+# Exclude large desktop executables that exceed GitHub limits
+/Server/wwwroot/Content/Win-x64/Remotely_Desktop.exe
+/Server/wwwroot/Content/Win-x86/Remotely_Desktop.exe
+/Server/wwwroot/Content/Linux-x64/Remotely_Desktop
+# Exclude large ZIP files that exceed GitHub recommended limits
+/Server/wwwroot/Content/Remotely-Linux.zip
+/Server/wwwroot/Content/Remotely-Win-x64.zip

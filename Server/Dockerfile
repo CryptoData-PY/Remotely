@@ -4,7 +4,7 @@ WORKDIR /app
 EXPOSE ${ASPNETCORE_HTTP_PORTS}
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-RUN apt-get update && apt-get install -y nodejs npm curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y nodejs npm curl zip && rm -rf /var/lib/apt/lists/*
 ARG ASPNETCORE_ENVIRONMENT=Production
 WORKDIR /src
 COPY ["Server/Server.csproj", "Server/"]
@@ -23,6 +23,11 @@ COPY --from=publish /app/publish .
 # Copy all essential client files from the repository
 RUN mkdir -p /app/wwwroot/Content
 COPY Server/wwwroot/Content/ /app/wwwroot/Content/
+
+# Build client files during Docker build
+WORKDIR /src
+RUN chmod +x publish_clients.sh && ./publish_clients.sh -MinimalMode
+
 ENTRYPOINT ["dotnet", "Remotely_Server.dll"]
 
 HEALTHCHECK \
