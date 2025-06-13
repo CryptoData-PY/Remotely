@@ -17,17 +17,25 @@ FROM build AS publish
 ARG ASPNETCORE_ENVIRONMENT=Production
 RUN dotnet publish "Server.csproj" -c $ASPNETCORE_ENVIRONMENT -o /app/publish /p:UseAppHost=false
 
+# Build client files during Docker build
+WORKDIR /src
+RUN mkdir -p Server/wwwroot/Content && \
+    # Build agents
+    dotnet publish Agent/Agent.csproj -c Release -r win-x64 --self-contained -o Agent/bin/publish/win-x64 && \
+    dotnet publish Agent/Agent.csproj -c Release -r linux-x64 --self-contained -o Agent/bin/publish/linux-x64 && \
+    # Create agent ZIP files
+    cd Agent/bin/publish/win-x64 && zip -r ../../../../Server/wwwroot/Content/Remotely-Win-x64.zip . && cd /src && \
+    cd Agent/bin/publish/linux-x64 && zip -r ../../../../Server/wwwroot/Content/Remotely-Linux.zip . && cd /src && \
+    # Build desktop clients (without single-file to avoid size issues)
+    dotnet publish Desktop.Win/Desktop.Win.csproj -c Release -r win-x64 --self-contained -o Server/wwwroot/Content/Win-x64 && \
+    dotnet publish Desktop.Linux/Desktop.Linux.csproj -c Release -r linux-x64 --self-contained -o Server/wwwroot/Content/Linux-x64
+
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-# Copy all essential client files from the repository
+# Copy all client files built during Docker build
 RUN mkdir -p /app/wwwroot/Content
-COPY Server/wwwroot/Content/ /app/wwwroot/Content/
-
-# Build client files during Docker build
-WORKDIR /src
-RUN chmod +x publish_clients.sh && ./publish_clients.sh -MinimalMode
-
+COPY --from=publish /src/Server/wwwroot/Content/ /app/wwwroot/Content/
 ENTRYPOINT ["dotnet", "Remotely_Server.dll"]
 
 HEALTHCHECK \
